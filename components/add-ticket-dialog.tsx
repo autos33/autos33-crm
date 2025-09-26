@@ -159,7 +159,7 @@ export function AddTicketDialog({ rifaId }: AddTicketDialogProps) {
           </div>
 
           <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => {setOpen(false);}}>
               Cerrar
             </Button>
             <Button type="submit" disabled={loading}>

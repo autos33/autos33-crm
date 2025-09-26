@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { RaffleStatsChart } from "@/components/raffle-stats-chart"
 import { AddTicketDialog } from "@/components/add-ticket-dialog"
+import { ActualizarButton } from "@/components/actualizar-button"
 import { CreatePremio } from "@/components/nuevo-premio-dialog"
 import { DeletePremio } from "@/components/eliminar-premio-dialog";
 import Link from "next/link"
@@ -225,7 +226,10 @@ export function RifaDetailsClient({ rifa, premios, boletos, stats }: RifaDetails
           <CardHeader>
             <CardTitle className="flex justify-between items-center">
               Boletos Vendidos ({filteredBoletos.length} encontrados)
-              <AddTicketDialog rifaId={rifa.id} />
+              <div className="flex flex-row justify-end gap-3">
+                <ActualizarButton />
+                <AddTicketDialog rifaId={rifa.id} />
+              </div>
             </CardTitle>
             <CardDescription>Lista de todos los boletos vendidos para esta rifa</CardDescription>
             <div className="flex flex-col w-full gap-2 py-5">
