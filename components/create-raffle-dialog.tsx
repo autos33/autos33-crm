@@ -96,10 +96,8 @@ export function CreateRaffleDialog() {
           fecha_culminacion: formData.fecha_culminacion,
           precio: formData.precio,
           cantidad_boletos: formData.cantidad_boletos,
-          estado: "activa", // Asumiendo que tienes este campo
-          fecha_creacion: new Date().toISOString()
-,
-
+          estado: "proximamente",
+          fecha_creacion: new Date().toISOString(),
         })
         .select()
         .single()

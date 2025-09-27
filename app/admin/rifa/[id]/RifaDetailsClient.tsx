@@ -11,6 +11,7 @@ import { RaffleStatsChart } from "@/components/raffle-stats-chart"
 import { AddTicketDialog } from "@/components/add-ticket-dialog"
 import { ActualizarButton } from "@/components/actualizar-button"
 import { CreatePremio } from "@/components/nuevo-premio-dialog"
+import { CambiarEstadoRifa } from "@/components/cambiar-estado-rifa";
 import { DeletePremio } from "@/components/eliminar-premio-dialog";
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
@@ -85,7 +86,6 @@ export function RifaDetailsClient({ rifa, premios, boletos, stats }: RifaDetails
           valueToSearch = boleto.telefono_comprador;
           break;
         case 'numero':
-          // Convertimos el número a string para buscar subcadenas
           valueToSearch = String(boleto.numero_boleto); 
           break;
         default:
@@ -222,7 +222,7 @@ export function RifaDetailsClient({ rifa, premios, boletos, stats }: RifaDetails
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex justify-between items-center">
               Boletos Vendidos ({filteredBoletos.length} encontrados)
@@ -275,6 +275,25 @@ export function RifaDetailsClient({ rifa, premios, boletos, stats }: RifaDetails
               <div className="text-center py-8 text-gray-500">No se encontraron boletos con el filtro actual.</div>
             )}
           </CardContent>
+        </Card>
+
+        <Card className="mb-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 p-4">
+            <div className="flex flex-col">
+              <span className="text-2xl font-semibold">Cambiar estado de la Rifa</span>
+              <span className="text-gray-600">Actualiza el estado de la rifa. Inicia, Finaliza o Habilita</span>
+            </div>
+            <div className={`flex flex-row border rounded-lg p-3 gap-4 items-center 
+              ${rifa.estado === "activa" ? "border-2 border-green-600 bg-green-300" : 
+              rifa.estado === "finalizada" ? "border-2 border-red-600 bg-red-300" : 
+              "border-2 border-yellow-600 bg-yellow-300"}`}>
+
+              <span className="text-md text-gray-600">Estado Actual:</span>
+              <span className={`text-md font-bold ${rifa.estado === "activa" ? "text-green-800" : rifa.estado === "finalizada" ? "text-red-800" : "text-yellow-800"}`}>{rifa.estado === "activa" ? "Activa" : rifa.estado === "finalizada" ? "Finalizada" : "Próximamente"}</span>
+
+            </div>
+            <CambiarEstadoRifa rifaId={rifa.id.toString()} estado={rifa.estado} />
+          </div>
         </Card>
       </div>
     </div>

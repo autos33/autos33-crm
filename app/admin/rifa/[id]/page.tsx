@@ -1,5 +1,4 @@
-// Este archivo es un Server Component por defecto.
-// NO debe tener la directiva 'use client'
+
 import { redirect } from "next/navigation"
 import { supabase } from "@/lib/supabase-client"; // Asumo que este es tu cliente *Client-side*
 import { RifaDetailsClient } from "./RifaDetailsClient"; // <-- Importamos el nuevo componente de cliente
@@ -66,7 +65,6 @@ async function getRifaById(id: string) {
 }
 
 async function getPremiosByRifaId(rifaId: string) {
-  // ... (Tu lógica de fetching se mantiene igual) ...
   const { data, error } = await supabase
     .from('Premios')
     .select('*')
@@ -79,11 +77,7 @@ async function getPremiosByRifaId(rifaId: string) {
   return data;
 }
 
-// ... (Las funciones getBoletosByRifaId, getBoletosDisponiblesPorRifa, etc. se mantienen igual) ...
-
 async function getBoletosByRifaId(rifaId: string) {
-  // Always use fallback data to avoid connection issues
-  // return fallbackBoletos.filter((boleto) => boleto.id_rifa.toString() === rifaId)
   const { data, error } = await supabase
     .from('Boletos')
     .select('*')
@@ -128,14 +122,12 @@ async function getBoletosVendidosPorRifa(rifaId: string) {
 }
 
 export default async function RifaDetailPage({ params }: PageProps) {
-  // 1. Verificación de Autenticación (Ahora funciona en el servidor)
   const cookieStore = cookies()
   const demoToken = cookieStore.get("admin-token")
   if (!demoToken) {
     redirect("/admin")
   }
 
-  // 2. Carga de datos (async/await es seguro aquí)
   const rifa = await getRifaById(params.id)
   if (!rifa) {
     redirect("/admin/dashboard")
@@ -153,12 +145,11 @@ export default async function RifaDetailPage({ params }: PageProps) {
     reservados: (rifa.cantidad_boletos - cantidadBoletosVendidos - cantidadBoletosDisponibles),
   }
 
-  // 3. Renderizar el componente de cliente y pasar los datos como props
   return (
     <RifaDetailsClient
       rifa={rifa}
       premios={premios}
-      boletos={boletos as any[]} // Ajusta el tipo si es necesario
+      boletos={boletos as any[]}
       stats={stats}
     />
   )

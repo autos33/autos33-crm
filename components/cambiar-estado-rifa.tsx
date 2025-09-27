@@ -14,71 +14,40 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase-client";
 
-export function DeletePremio({
-  rifaId,
-  premioId,
-}: {
-  rifaId: string;
-  premioId: string;
-}) {
+export function CambiarEstadoRifa({rifaId, estado,}: {rifaId: string; estado: string;}) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
-  const handleDelete = async () => {
+  const handleCambiarEstado = async () => {
     setLoading(true);
-
+    let newEstado = '';
+    if (estado === 'activa') {
+      newEstado = 'finalizada';
+    } else if (estado === 'proximamente') {
+      newEstado = 'activa';
+    } else {
+      newEstado = 'activa';
+    }
     try {
       const { data: premioData, error: fetchError } = await supabase
-        .from("Premios")
-        .select("foto_url")
-        .eq("id", premioId)
-        .single();
+        .from('Rifas')
+        .update({ estado: newEstado })
+        .eq('id', rifaId)
+        .select()
 
       if (fetchError) {
         throw fetchError;
       }
 
-      if (premioData.foto_url) {
-        const url = new URL(premioData.foto_url);
-        const filePath = url.pathname.split("/public/").pop();
-
-        if (filePath) {
-          const { error: storageError } = await supabase.storage
-            .from("foto-premio")
-            .remove([filePath]);
-
-          if (storageError) {
-            console.error(
-              "Error al eliminar la imagen del storage:",
-              storageError.message
-            );
-          }
-        }
-      }
-
-      const { error: deleteError } = await supabase
-        .from("Premios")
-        .delete()
-        .eq("id", premioId);
-
-      if (deleteError) {
-        throw deleteError;
-      }
-
-      toast({
-        title: "Premio eliminado",
-        description: "El premio se ha eliminado exitosamente",
-      });
-
       setOpen(false);
       router.refresh();
     } catch (error: any) {
-      console.error("Error al eliminar premio:", error.message);
+      console.error("Error al actualizar el estado de la Rifa:", error.message);
       toast({
         title: "Error",
-        description: error.message || "No se pudo eliminar el premio",
+        description: error.message || "No se pudo actualizar el estado de la rifa.",
         variant: "destructive",
       });
     } finally {
@@ -89,14 +58,13 @@ export function DeletePremio({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive">Eliminar</Button>
+        <Button size="lg" variant="destructive">{estado === "activa" ? "Finalizar Rifa" : estado === "proximamente" ? "Iniciar Rifa" : "Habilitar Rifa"}</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Eliminar Premio</DialogTitle>
+          <DialogTitle>{estado === "activa" ? "Finalizar Rifa" : estado === "proximamente" ? "Iniciar Rifa" : "Habilitar Rifa"}</DialogTitle>
           <DialogDescription>
-            ¿Estás seguro de que quieres eliminar este premio? Esta acción no se
-            puede deshacer.
+            ¿Estás seguro de que quieres realizar esta acción?
           </DialogDescription>
         </DialogHeader>
 
@@ -112,10 +80,10 @@ export function DeletePremio({
           <Button
             type="button"
             variant="destructive"
-            onClick={handleDelete}
+            onClick={handleCambiarEstado}
             disabled={loading}
           >
-            {loading ? "Eliminando..." : "Eliminar"}
+            {loading ? "Actualizando..." : "Actualizar"}
           </Button>
         </div>
       </DialogContent>
