@@ -171,7 +171,7 @@ export function RifaDetailsClient({ rifa, premios, boletos, stats }: RifaDetails
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-purple-600">Bs {rifa.precio.toFixed(2)}</div>
-                <p className="text-xs text-gray-500">Total: {stats.total.toLocaleString()} boletos</p>
+                <p className="text-xs text-gray-500">Total: {stats.total.toString()} boletos</p>
               </CardContent>
             </Card>
           </div>
@@ -261,7 +261,7 @@ export function RifaDetailsClient({ rifa, premios, boletos, stats }: RifaDetails
               <TableBody>
                 {filteredBoletos.map((boleto) => (
                   <TableRow key={boleto.id}>
-                    <TableCell className="font-mono font-semibold">#{boleto.numero_boleto}</TableCell>
+                    <TableCell className="font-mono font-semibold">#{boleto.numero_boleto.toString()}</TableCell>
                     <TableCell className="font-medium">{boleto.nombre_comprador}</TableCell>
                     <TableCell>{boleto.cedula_comprador}</TableCell>
                     <TableCell>{boleto.telefono_comprador}</TableCell>

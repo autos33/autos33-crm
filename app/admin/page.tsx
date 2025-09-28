@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
-import { supabase } from "@/lib/supabase-client" // Asegúrate de que esta ruta sea correcta
+import { supabase } from "@/lib/supabase-client"
+import DotGrid from '@/components/dot-grid';
+import Orb from '@/components/orbe';
 
 export default function AdminLogin() {
   const [isSignUp, setIsSignUp] = useState(false)
@@ -22,13 +24,9 @@ export default function AdminLogin() {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-
-    // Aquí ya no necesitamos el modo demo, ya que Supabase es el servicio de autenticación
-    // y debe estar configurado.
     
     try {
       if (isSignUp) {
-        // Lógica de registro con Supabase
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -46,13 +44,11 @@ export default function AdminLogin() {
             description: "Te hemos enviado un enlace de confirmación. Haz clic en él para iniciar sesión.",
             variant: "default",
           })
-          // Opcional: Cambiar al modo de inicio de sesión después del registro exitoso
           setIsSignUp(false);
           setEmail("");
           setPassword("");
         }
       } else {
-        // Lógica de inicio de sesión con Supabase
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         console.log("Resultado de login:", { data, error });
 
@@ -83,71 +79,82 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">
-            {isSignUp ? "✍️ Registrarse" : "🔐 Panel de Administración"}
-          </CardTitle>
-          <CardDescription>
-            {isSignUp ? "Crea una nueva cuenta de administrador." : "Ingresa tus credenciales para acceder al CRM."}
-            <div className="mt-2">
-                <Badge variant="outline" className="text-blue-600 border-blue-600">
-                  Autenticación con Supabase
-                </Badge>
-              </div>
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleAuth} className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={"Ingresa tu email"}
-                required
+        <div className="relative min-h-screen w-full overflow-hidden bg-gray-50">
+            <div className="absolute inset-0 z-10">
+              {/* 
+              <DotGrid
+                dotSize={10}
+                gap={20}
+                baseColor="#000000"
+                activeColor="#ff0000"
+                proximity={120}
+                shockRadius={250}
+                shockStrength={5}
+                resistance={750}
+                returnDuration={1.5}
+              />
+                */}
+              <Orb
+                hoverIntensity={0.5}
+                rotateOnHover={true}
+                hue={0}
+                forceHoverState={false}
               />
             </div>
-            <div>
-              <Label htmlFor="password">Contraseña</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={"Ingresa tu contraseña"}
-                required
-              />
+            
+            <div className="relative z-10 min-h-screen flex items-center justify-center">
+                <Card className="w-full max-w-md bg-white/90 backdrop-blur-sm shadow-xl">
+                    <CardHeader className="text-center">
+                        <CardTitle className="text-2xl">
+                            Panel de Administración
+                        </CardTitle>
+                        <CardDescription>
+                            Ingresa tus credenciales para acceder al sistema.
+                            <div className="mt-2">
+                                <Badge variant="outline" className="text-blue-600 border-blue-600">
+                                    Autenticación con Supabase
+                                </Badge>
+                            </div>
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleAuth} className="space-y-4">
+                            <div>
+                                <Label htmlFor="email">Email</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder={"Ingresa tu email"}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="password">Contraseña</Label>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder={"Ingresa tu contraseña"}
+                                    required
+                                />
+                            </div>
+                            <Button type="submit" className="w-full" disabled={loading}>
+                                {loading ? "Verificando..." : "Ingresar"}
+                            </Button>
+                        </form>
+                        <div className="mt-4 text-center">
+                            <div className="mt-4">
+                                <a href="https://ganaconautos33.com" className="text-sm text-blue-600 hover:underline">
+                                    ← Volver a la página principal
+                                </a>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading
-                ? isSignUp
-                  ? "Registrando..."
-                  : "Verificando..."
-                : isSignUp
-                ? "Registrarse"
-                : "Ingresar"}
-            </Button>
-          </form>
-          <div className="mt-4 text-center">
-            <Button
-              variant="link"
-              className="p-0 text-sm"
-              onClick={() => setIsSignUp(!isSignUp)}
-            >
-              {isSignUp ? "¿Ya tienes cuenta? Inicia sesión" : "¿No tienes cuenta? Regístrate"}
-            </Button>
-            <div className="mt-4">
-              <a href="/" className="text-sm text-blue-600 hover:underline">
-                ← Volver a la página principal
-              </a>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
+        </div>
+    )
 }
