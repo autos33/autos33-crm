@@ -49,7 +49,7 @@ export function CreateGanadorDialog() {
     const filePath = `${file.name}-${Date.now()}`
     
     const { error } = await supabase.storage
-      .from("ganador_img") // Asegúrate de que este bucket existe en Supabase Storage
+      .from("ganador_img")
       .upload(filePath, file)
 
     if (error) {

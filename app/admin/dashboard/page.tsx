@@ -7,8 +7,16 @@ import { AdminDashboardClient } from "./AdminDashboardClient"; // Import the new
 interface Rifa { id: number; titulo: string; estado: string; precio: number; cantidad_boletos: number; fecha_culminacion: string; foto: string; }
 interface Ganador { id: number; titulo: string; estado: boolean; foto_url: string; }
 
-
 async function getRifas(): Promise<Rifa[] | null> {
+
+    const { data: dataBoletos, error: errorBoletos } = await supabase.rpc('liberar_boletos_reservados');
+    // se mostrará el mensje en la consola del servidor
+    if (errorBoletos) {
+        console.error('Error al liberar boletos:', errorBoletos);
+    } else {
+        console.log('Boletos expirados liberados con éxito.');
+    }
+
     const { data, error } = await supabase
         .from('Rifas')
         .select('*');

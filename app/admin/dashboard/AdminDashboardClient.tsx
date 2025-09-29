@@ -129,7 +129,7 @@ export function AdminDashboardClient({ rifas, ganadores, boletosVendidosPorRifa 
                                         <TableCell className="font-medium">{rifa.titulo}</TableCell>
                                         <TableCell>{getStatusBadge(rifa.estado)}</TableCell>
                                         <TableCell className="font-semibold">Bs {rifa.precio.toFixed(2)}</TableCell>
-                                        <TableCell>{rifa.cantidad_boletos.toLocaleString()}</TableCell>
+                                        <TableCell>{rifa.cantidad_boletos.toString()}</TableCell>
                                         <TableCell className="text-green-600 font-semibold">{boletosVendidosPorRifa[index]}</TableCell>
                                         <TableCell>{new Date(rifa.fecha_culminacion).toLocaleDateString()}</TableCell>
                                         <TableCell>
