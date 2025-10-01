@@ -4,8 +4,8 @@ import { GeistMono } from 'geist/font/mono'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'CRM Rifas Corralitos',
-  description: 'CRM para gestionar rifas y boletos de Corralitos',
+  title: 'Administración Gana Con Autos 33',
+  description: 'Añade, Modifica, Elimina y Consulta registros de Gana con Autos 33',
 }
 
 export default function RootLayout({
