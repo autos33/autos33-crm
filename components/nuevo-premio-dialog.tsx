@@ -76,7 +76,6 @@ export function CreatePremio({ rifaId }: { rifaId: string }) {
     try {
       let imageUrl = null
       if (imagenPremio) {
-        console.log(imagenPremio)
         imageUrl = await uploadImage(imagenPremio)
         if (!imageUrl) {
           toast({

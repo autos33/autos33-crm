@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabase-client"
 import DotGrid from '@/components/dot-grid';
 import Orb from '@/components/orbe';
+import { set } from "gsap"
 
 export default function AdminLogin() {
   const [isSignUp, setIsSignUp] = useState(false)
@@ -20,8 +21,10 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
+  const [respuesta, setRespuesta] = useState("");
 
   const handleAuth = async (e: React.FormEvent) => {
+    setRespuesta("");
     e.preventDefault()
     setLoading(true)
     
@@ -50,7 +53,9 @@ export default function AdminLogin() {
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        console.log("Resultado de login:", { data, error });
+        if (error && error.status === 400) {
+          setRespuesta("Credenciales inválidas. Por favor, verifica tu email y contraseña.");
+        };
 
         if (error) {
           toast({
@@ -144,6 +149,9 @@ export default function AdminLogin() {
                             <Button type="submit" className="w-full" disabled={loading}>
                                 {loading ? "Verificando..." : "Ingresar"}
                             </Button>
+                            <div>
+                              <p className="text-sm text-red-600">{respuesta}</p>
+                            </div>
                         </form>
                         <div className="mt-4 text-center">
                             <div className="mt-4">
