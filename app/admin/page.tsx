@@ -21,10 +21,10 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
-  const [respuesta, setRespuesta] = useState("");
+  const [respuesta, setRespuesta] = useState({estado: "", mensaje: ""});
 
   const handleAuth = async (e: React.FormEvent) => {
-    setRespuesta("");
+    setRespuesta({ estado: "", mensaje: "" });
     e.preventDefault()
     setLoading(true)
     
@@ -54,8 +54,11 @@ export default function AdminLogin() {
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error && error.status === 400) {
-          setRespuesta("Credenciales inválidas. Por favor, verifica tu email y contraseña.");
+          setRespuesta({ estado: "error", mensaje: "Credenciales inválidas. Por favor, verifica tu email y contraseña." });
         };
+        if (!error) {
+          setRespuesta({ estado: "correcto", mensaje: "Inicio de sesión exitoso. Redirigiendo..." });
+        }
 
         if (error) {
           toast({
@@ -150,7 +153,7 @@ export default function AdminLogin() {
                                 {loading ? "Verificando..." : "Ingresar"}
                             </Button>
                             <div>
-                              <p className="text-sm text-red-600">{respuesta}</p>
+                              <p className={`text-sm ${respuesta.estado === "error" ? "text-red-600" : respuesta.estado === "correcto" ? "text-green-600" : "hidden"}`}>{respuesta.mensaje}</p>
                             </div>
                         </form>
                         <div className="mt-4 text-center">
