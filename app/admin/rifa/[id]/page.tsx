@@ -5,8 +5,11 @@ import { RifaDetailsClient } from "./RifaDetailsClient"; // <-- Importamos el nu
 import { cookies } from "next/headers"; // <-- Importación correcta de SERVER
 
 interface PageProps {
-  params: {
-    id: string
+  params: { id: string }
+  searchParams: {
+    page?: string
+    query?: string
+    filter?: string
   }
 }
 
@@ -77,24 +80,49 @@ async function getPremiosByRifaId(rifaId: string) {
   return data;
 }
 
-async function getBoletosByRifaId(rifaId: string) {
-  const { data, error } = await supabase
+async function getBoletosPaginados(rifaId: string, page: number, query: string, filter: string) {
+  const limit = 50; // Cantidad de boletos por página
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  // Iniciamos la consulta pidiendo también el conteo total (exact)
+  let supabaseQuery = supabase
     .from('Boletos')
-    .select('*')
+    .select('*', { count: 'exact' })
     .eq('id_rifa', rifaId)
     .eq('estado', 'ocupado');
 
-  if (error) {
-    console.error("Error fetching boletos:", error);
-    return [];
+  // Si hay algo escrito en el buscador, aplicamos el filtro correspondiente
+  if (query) {
+    if (filter === 'nombre') {
+      supabaseQuery = supabaseQuery.ilike('nombre_comprador', `%${query}%`);
+    } else if (filter === 'cedula') {
+      supabaseQuery = supabaseQuery.ilike('cedula_comprador', `%${query}%`);
+    } else if (filter === 'telefono') {
+      supabaseQuery = supabaseQuery.ilike('telefono_comprador', `%${query}%`);
+    } else if (filter === 'numero' && !isNaN(Number(query))) {
+      supabaseQuery = supabaseQuery.eq('numero_boleto', Number(query));
+    }
   }
-  return data;
+
+  // Ejecutamos la consulta con el rango de paginación
+  const { data, count, error } = await supabaseQuery
+    .order('numero_boleto', { ascending: true })
+    .range(from, to);
+
+  if (error) {
+    console.error("Error fetching paginated boletos:", error);
+    return { boletos: [], totalBoletos: 0 };
+  }
+
+  return { boletos: data, totalBoletos: count || 0 };
 }
 
 async function getBoletosDisponiblesPorRifa(rifaId: string) {
-  const { data, error } = await supabase
+  // Extraemos 'count' en lugar de 'data' y añadimos { count: 'exact', head: true }
+  const { count, error } = await supabase
     .from('Boletos')
-    .select('*')
+    .select('*', { count: 'exact', head: true }) 
     .eq('id_rifa', rifaId)
     .eq('estado', 'disponible');
 
@@ -103,38 +131,43 @@ async function getBoletosDisponiblesPorRifa(rifaId: string) {
     return 0;
   }
 
-  return data?.length || 0;
+  // Retornamos directamente el conteo
+  return count || 0;
 }
 
 async function getBoletosVendidosPorRifa(rifaId: string) {
-  const { data, error } = await supabase
+  const { count, error } = await supabase
     .from('Boletos')
-    .select('*')
+    .select('*', { count: 'exact', head: true })
     .eq('id_rifa', rifaId)
     .eq('estado', 'ocupado');
 
   if (error) {
-    console.error("Error fetching boletos disponibles:", error);
+    console.error("Error fetching boletos vendidos:", error);
     return 0;
   }
 
-  return data?.length || 0;
+  return count || 0;
 }
 
-export default async function RifaDetailPage({ params }: PageProps) {
+export default async function RifaDetailPage({ params, searchParams }: PageProps) {
   const cookieStore = cookies()
   const demoToken = cookieStore.get("admin-token")
-  if (!demoToken) {
-    redirect("/admin")
-  }
+  if (!demoToken) redirect("/admin")
 
   const rifa = await getRifaById(params.id)
-  if (!rifa) {
-    redirect("/admin/dashboard")
-  }
+  if (!rifa) redirect("/admin/dashboard")
+
+  // Extraemos los valores de la URL o asignamos valores por defecto
+  const currentPage = Number(searchParams?.page) || 1;
+  const currentQuery = searchParams?.query || "";
+  const currentFilter = searchParams?.filter || "nombre";
 
   const premios = await getPremiosByRifaId(params.id)
-  const boletos = await getBoletosByRifaId(params.id)
+  
+  // Usamos la nueva función
+  const { boletos, totalBoletos } = await getBoletosPaginados(params.id, currentPage, currentQuery, currentFilter);
+  
   const cantidadBoletosDisponibles = await getBoletosDisponiblesPorRifa(params.id);
   const cantidadBoletosVendidos = await getBoletosVendidosPorRifa(params.id);
 
@@ -150,6 +183,8 @@ export default async function RifaDetailPage({ params }: PageProps) {
       rifa={rifa}
       premios={premios}
       boletos={boletos as any[]}
+      totalBoletos={totalBoletos} // Pasamos el total de encontrados
+      currentPage={currentPage}   // Pasamos la página actual
       stats={stats}
     />
   )

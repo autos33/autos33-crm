@@ -35,6 +35,7 @@ export function CreateRaffleDialog() {
 
   const [imagenRifa, setImagenRifa] = useState<File | null>(null)
   const [imagenPreview, setImagenPreview] = useState<string | null>(null)
+  const [sinFecha, setSinFecha] = useState(false)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -93,7 +94,7 @@ export function CreateRaffleDialog() {
           titulo: formData.titulo,
           detalles: formData.detalles,
           foto: imageUrl,
-          fecha_culminacion: formData.fecha_culminacion,
+          fecha_culminacion: sinFecha ? null : formData.fecha_culminacion,
           precio: formData.precio,
           cantidad_boletos: formData.cantidad_boletos,
           estado: "proximamente",
@@ -136,6 +137,7 @@ export function CreateRaffleDialog() {
     })
     setImagenRifa(null)
     setImagenPreview(null)
+    setSinFecha(false)
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
@@ -198,17 +200,35 @@ export function CreateRaffleDialog() {
             )}
           </div>
 
-          <div>
-            <Label htmlFor="fecha_culminacion">Fecha de culminación</Label>
-            <Input
+            <div>
+            <Label htmlFor="fecha_culminacion" className="mb-2 block">
+              Fecha de culminación
+            </Label>
+            <div className="flex gap-2">
+              <Input
               id="fecha_culminacion"
               type="datetime-local"
               value={formData.fecha_culminacion}
               onChange={(e) => setFormData((prev) => ({ ...prev, fecha_culminacion: e.target.value }))}
               min={new Date().toISOString().slice(0, 16)}
-              required
-            />
-          </div>
+              required={!sinFecha}
+              disabled={sinFecha}
+              className="flex-1"
+              />
+              <Button
+              type="button"
+              variant={sinFecha ? "default" : "outline"}
+              size="sm"
+              className="h-10 text-xs flex-1"
+              onClick={() => {
+                setSinFecha(!sinFecha)
+                if (!sinFecha) setFormData((prev) => ({ ...prev, fecha_culminacion: "" }))
+              }}
+              >
+              {sinFecha ? "Con fecha indefinida" : "Dejar sin fecha"}
+              </Button>
+            </div>
+            </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>

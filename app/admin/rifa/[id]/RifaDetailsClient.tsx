@@ -1,12 +1,14 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useRouter, usePathname, useSearchParams } from "next/navigation"
+import { useEffect, useState, useMemo } from "react"
 import { AdminNav } from "@/components/admin-nav"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { LiberarBoletosDialog } from "@/components/liberar-boletos-dialog";
 import { RaffleStatsChart } from "@/components/raffle-stats-chart"
 import { AddTicketDialog } from "@/components/add-ticket-dialog"
 import { ActualizarButton } from "@/components/actualizar-button"
@@ -58,44 +60,53 @@ interface RifaDetailsClientProps {
   rifa: Rifa
   premios: Premio[]
   boletos: Boleto[]
+  totalBoletos: number // NUEVO
+  currentPage: number  // NUEVO
   stats: Stats
 }
 
-export function RifaDetailsClient({ rifa, premios, boletos, stats }: RifaDetailsClientProps) {
-  const [searchFilter, setSearchFilter] = useState("");
-  const [filtroBoletos, setFiltroBoletos] = useState<"nombre" | "cedula" | "telefono" | "numero">("nombre");
+export function RifaDetailsClient({ rifa, premios, boletos, totalBoletos, currentPage, stats }: RifaDetailsClientProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  const filteredBoletos = useMemo(() => {
-    if (!searchFilter) {
-      return boletos;
-    }
+  // Estados locales para la UI
+  const [localQuery, setLocalQuery] = useState(searchParams.get("query") || "");
+  const [filtroBoletos, setFiltroBoletos] = useState(searchParams.get("filter") || "nombre");
 
-    const lowerCaseSearch = searchFilter.toLowerCase();
+  const totalPages = Math.ceil(totalBoletos / 50);
 
-    return boletos.filter(boleto => {
-      let valueToSearch = '';
+  // Función para actualizar la URL
+  const updateUrl = (newQuery: string, newFilter: string, newPage: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    
+    if (newQuery) params.set("query", newQuery);
+    else params.delete("query");
+    
+    params.set("filter", newFilter);
+    params.set("page", newPage.toString());
+    
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
-      switch (filtroBoletos) {
-        case 'nombre':
-          valueToSearch = boleto.nombre_comprador;
-          break;
-        case 'cedula':
-          valueToSearch = boleto.cedula_comprador;
-          break;
-        case 'telefono':
-          valueToSearch = boleto.telefono_comprador;
-          break;
-        case 'numero':
-          valueToSearch = String(boleto.numero_boleto); 
-          break;
-        default:
-          return true;
+  // Actualiza la búsqueda al presionar "Enter" o perder el foco, para no saturar el servidor por cada letra
+  const handleSearch = () => {
+    updateUrl(localQuery, filtroBoletos, 1); // Siempre vuelve a la página 1 al buscar
+  };
+  useEffect(() => {
+    const temporizador = setTimeout(() => {
+      const urlQueryActual = searchParams.get("query") || "";
+      if (localQuery !== urlQueryActual) {
+        updateUrl(localQuery, filtroBoletos, 1);
       }
-      
-      return valueToSearch.toLowerCase().includes(lowerCaseSearch);
-    });
-  }, [boletos, searchFilter, filtroBoletos]);
+    }, 1000);
+    return () => clearTimeout(temporizador);
+  }, [localQuery, filtroBoletos, searchParams]);
 
+  const handleFilterChange = (filter: string) => {
+    setFiltroBoletos(filter);
+    updateUrl(localQuery, filter, 1);
+  };
 
   const getStatusBadge = (estado: string) => {
     switch (estado) {
@@ -225,8 +236,9 @@ export function RifaDetailsClient({ rifa, premios, boletos, stats }: RifaDetails
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex justify-between items-center">
-              Boletos Vendidos ({filteredBoletos.length} encontrados)
+              Boletos Vendidos ({stats.vendidos} boletos encontrados)
               <div className="flex flex-row justify-end gap-3">
+                <LiberarBoletosDialog rifaId={rifa.id} />
                 <ActualizarButton />
                 <AddTicketDialog rifaId={rifa.id} />
               </div>
@@ -234,16 +246,21 @@ export function RifaDetailsClient({ rifa, premios, boletos, stats }: RifaDetails
             <CardDescription>Lista de todos los boletos vendidos para esta rifa</CardDescription>
             <div className="flex flex-col w-full gap-2 py-5">
               <div className="flex flex-row w-full md:w-1/2 gap-3 justify-start">
-                <Button variant="outline" size="sm" className={filtroBoletos === "nombre" ? "bg-gray-200" : ""} onClick={() => {setFiltroBoletos("nombre")}}> Nombre </Button>
-                <Button variant="outline" size="sm" className={filtroBoletos === "cedula" ? "bg-gray-200" : ""} onClick={() => {setFiltroBoletos("cedula")}}> Cédula </Button>
-                <Button variant="outline" size="sm" className={filtroBoletos === "telefono" ? "bg-gray-200" : ""} onClick={() => {setFiltroBoletos("telefono")}}> Teléfono </Button>
-                <Button variant="outline" size="sm" className={filtroBoletos === "numero" ? "bg-gray-200" : ""} onClick={() => {setFiltroBoletos("numero")}}> N° Boleto </Button>
+                <Button variant="outline" size="sm" className={filtroBoletos === "nombre" ? "bg-gray-200" : ""} onClick={() => handleFilterChange("nombre")}> Nombre </Button>
+                <Button variant="outline" size="sm" className={filtroBoletos === "cedula" ? "bg-gray-200" : ""} onClick={() => handleFilterChange("cedula")}> Cédula </Button>
+                <Button variant="outline" size="sm" className={filtroBoletos === "telefono" ? "bg-gray-200" : ""} onClick={() => handleFilterChange("telefono")}> Teléfono </Button>
+                <Button variant="outline" size="sm" className={filtroBoletos === "numero" ? "bg-gray-200" : ""} onClick={() => handleFilterChange("numero")}> N° Boleto </Button>
               </div>
-              <Input 
-                  placeholder={`Buscar por ${filtroBoletos}...`}
-                  value={searchFilter}
-                  onChange={(e) => setSearchFilter(e.target.value)}
-              />
+              <div className="flex gap-2">
+                <Input 
+                    placeholder={`Buscar por ${filtroBoletos}...`}
+                    value={localQuery}
+                    onChange={(e) => setLocalQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    onBlur={handleSearch}
+                />
+                <Button onClick={handleSearch} variant="secondary">Buscar</Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -259,7 +276,7 @@ export function RifaDetailsClient({ rifa, premios, boletos, stats }: RifaDetails
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredBoletos.map((boleto) => (
+                {boletos.map((boleto) => (
                   <TableRow key={boleto.id}>
                     <TableCell className="font-mono font-semibold">#{boleto.numero_boleto.toString()}</TableCell>
                     <TableCell className="font-medium">{boleto.nombre_comprador}</TableCell>
@@ -271,8 +288,36 @@ export function RifaDetailsClient({ rifa, premios, boletos, stats }: RifaDetails
                 ))}
               </TableBody>
             </Table>
-            {filteredBoletos.length === 0 && (
+            
+            {boletos.length === 0 && (
               <div className="text-center py-8 text-gray-500">No se encontraron boletos con el filtro actual.</div>
+            )}
+
+            {/* CONTROLES DE PAGINACIÓN */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-2 py-4">
+                <p className="text-sm text-gray-500">
+                  Mostrando página {currentPage} de {totalPages} ({totalBoletos} resultados)
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage <= 1}
+                    onClick={() => updateUrl(localQuery, filtroBoletos, currentPage - 1)}
+                  >
+                    Anterior
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage >= totalPages}
+                    onClick={() => updateUrl(localQuery, filtroBoletos, currentPage + 1)}
+                  >
+                    Siguiente
+                  </Button>
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>
