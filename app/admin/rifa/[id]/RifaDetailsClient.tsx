@@ -140,7 +140,7 @@ export function RifaDetailsClient({ rifa, premios, boletos, totalBoletos, curren
               <div className="flex items-center gap-4 mt-4">
                 {getStatusBadge(rifa.estado)}
                 <span className="text-sm text-gray-500">
-                  Culmina: {new Date(rifa.fecha_culminacion).toLocaleDateString()}
+                  Culmina: {rifa.fecha_culminacion ? new Date(rifa.fecha_culminacion).toLocaleDateString() : "---"}
                 </span>
               </div>
             </div>
