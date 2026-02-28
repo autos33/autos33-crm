@@ -17,6 +17,7 @@ import { CambiarEstadoRifa } from "@/components/cambiar-estado-rifa";
 import { DeletePremio } from "@/components/eliminar-premio-dialog";
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
+import { supabase } from "@/lib/supabase-client"
 
 interface Rifa {
   id: number
@@ -28,6 +29,7 @@ interface Rifa {
   cantidad_boletos: number
   estado: string
   fecha_creacion: string
+  porcentaje_venta: number | null
 }
 
 interface Premio {
@@ -73,6 +75,27 @@ export function RifaDetailsClient({ rifa, premios, boletos, totalBoletos, curren
   // Estados locales para la UI
   const [localQuery, setLocalQuery] = useState(searchParams.get("query") || "");
   const [filtroBoletos, setFiltroBoletos] = useState(searchParams.get("filter") || "nombre");
+
+  const [porcentajeVisual, setPorcentajeVisual] = useState<number | null>(rifa.porcentaje_venta ?? null);
+  const [isSavingPorcentaje, setIsSavingPorcentaje] = useState(false);
+
+  const actualizarPorcentajeVisual = async (nuevoValor: number | null) => {
+    setIsSavingPorcentaje(true);
+    const { error } = await supabase
+      .from('Rifas')
+      .update({ porcentaje_venta: nuevoValor })
+      .eq('id', rifa.id);
+
+    if (error) {
+      console.error("Error al actualizar porcentaje:", error);
+      alert("Hubo un error al guardar el porcentaje.");
+    } else {
+      setPorcentajeVisual(nuevoValor);
+      // Opcionalmente puedes forzar un router.refresh() aquí si quieres que page.tsx se recargue
+      router.refresh(); 
+    }
+    setIsSavingPorcentaje(false);
+  };
 
   const totalPages = Math.ceil(totalBoletos / 50);
 
@@ -319,6 +342,52 @@ export function RifaDetailsClient({ rifa, premios, boletos, totalBoletos, curren
                 </div>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Porcentaje de Venta Visual (Marketing)</CardTitle>
+            <CardDescription>
+              Ajusta el porcentaje de ventas que verán los usuarios en la página principal para generar interés. 
+              Si lo limpias, el sistema mostrará el porcentaje real calculado.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-6">
+              <div className="flex items-center gap-6">
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  value={porcentajeVisual ?? 0} // Si es null, el slider se pone en 0 visualmente
+                  onChange={(e) => setPorcentajeVisual(Number(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+                <div className="flex flex-col items-center justify-center min-w-[5rem] p-3 bg-gray-100 rounded-lg">
+                  <span className="text-2xl font-bold text-gray-800">
+                    {porcentajeVisual !== null ? `${porcentajeVisual}%` : 'Real'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => actualizarPorcentajeVisual(null)}
+                  disabled={isSavingPorcentaje || porcentajeVisual === null}
+                  className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                >
+                  Limpiar (Usar Real)
+                </Button>
+                <Button 
+                  onClick={() => actualizarPorcentajeVisual(porcentajeVisual)}
+                  disabled={isSavingPorcentaje || porcentajeVisual === rifa.porcentaje_venta}
+                >
+                  {isSavingPorcentaje ? "Guardando..." : "Guardar Porcentaje"}
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
 

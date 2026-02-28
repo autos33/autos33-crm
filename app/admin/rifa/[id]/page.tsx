@@ -25,6 +25,7 @@ interface Rifa {
   fecha_creacion: string
   boletos_vendidos: number
   boletos_disponibles: number
+  porcentaje_venta: number | null
 }
 
 interface Premio {
