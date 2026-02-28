@@ -350,7 +350,7 @@ export function RifaDetailsClient({ rifa, premios, boletos, totalBoletos, curren
             <CardTitle>Porcentaje de Venta Visual (Marketing)</CardTitle>
             <CardDescription>
               Ajusta el porcentaje de ventas que verán los usuarios en la página principal para generar interés. 
-              Si lo limpias, el sistema mostrará el porcentaje real calculado.
+              Si lo limpias, el sistema mostrará el porcentaje real calculado <strong>({((stats.vendidos / stats.total) * 100).toFixed(1)}%)</strong>.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -360,13 +360,18 @@ export function RifaDetailsClient({ rifa, premios, boletos, totalBoletos, curren
                   type="range" 
                   min="0" 
                   max="100" 
-                  value={porcentajeVisual ?? 0} // Si es null, el slider se pone en 0 visualmente
+                  // Si es null, el slider se posiciona en el valor real en lugar de 0
+                  value={porcentajeVisual ?? ((stats.vendidos / stats.total) * 100)} 
                   onChange={(e) => setPorcentajeVisual(Number(e.target.value))}
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
-                <div className="flex flex-col items-center justify-center min-w-[5rem] p-3 bg-gray-100 rounded-lg">
+                <div className="flex flex-col items-center justify-center min-w-[6rem] p-3 bg-gray-100 rounded-lg">
                   <span className="text-2xl font-bold text-gray-800">
                     {porcentajeVisual !== null ? `${porcentajeVisual}%` : 'Real'}
+                  </span>
+                  {/* Pequeño texto debajo para recordar el valor real en todo momento */}
+                  <span className="text-xs text-gray-500 mt-1 font-medium">
+                    Real: {((stats.vendidos / stats.total) * 100).toFixed(1)}%
                   </span>
                 </div>
               </div>
