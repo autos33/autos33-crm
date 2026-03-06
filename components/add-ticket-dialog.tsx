@@ -157,10 +157,10 @@ export function AddTicketDialog({ rifaId }: AddTicketDialogProps) {
               <Input
                 id="telefono_comprador"
                 value={formData.telefono_comprador}
-                maxLength={11}
+                maxLength={20}
                 minLength={11}
                 onChange={(e) => setFormData((prev) => ({ ...prev, telefono_comprador: e.target.value }))}
-                placeholder="04121234567"
+                placeholder="04121234567 o +1 (555) 123-4567"
               />
             </div>
 

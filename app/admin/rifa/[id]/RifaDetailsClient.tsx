@@ -58,16 +58,25 @@ interface Stats {
   reservados: number
 }
 
+interface TopComprador {
+  cedula: string
+  nombre: string
+  telefono: string
+  correo: string
+  cantidad: number
+}
+
 interface RifaDetailsClientProps {
   rifa: Rifa
   premios: Premio[]
   boletos: Boleto[]
-  totalBoletos: number // NUEVO
-  currentPage: number  // NUEVO
+  totalBoletos: number
+  currentPage: number 
   stats: Stats
+  topCompradores: TopComprador[]
 }
 
-export function RifaDetailsClient({ rifa, premios, boletos, totalBoletos, currentPage, stats }: RifaDetailsClientProps) {
+export function RifaDetailsClient({ rifa, premios, boletos, totalBoletos, currentPage, stats, topCompradores }: RifaDetailsClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -142,6 +151,13 @@ export function RifaDetailsClient({ rifa, premios, boletos, totalBoletos, curren
       default:
         return <Badge variant="secondary">{estado}</Badge>
     }
+  }
+
+  const getPosicionBadge = (index: number) => {
+    if (index === 0) return <span className="text-xl" title="Primer Lugar">🥇 1</span>;
+    if (index === 1) return <span className="text-xl" title="Segundo Lugar">🥈 2</span>;
+    if (index === 2) return <span className="text-xl" title="Tercer Lugar">🥉 3</span>;
+    return <span className="font-bold text-gray-500">{index + 1}</span>;
   }
 
   return (
@@ -317,11 +333,14 @@ export function RifaDetailsClient({ rifa, premios, boletos, totalBoletos, curren
             )}
 
             {/* CONTROLES DE PAGINACIÓN */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-2 py-4">
-                <p className="text-sm text-gray-500">
-                  Mostrando página {currentPage} de {totalPages} ({totalBoletos} resultados)
-                </p>
+            <div className="flex items-center justify-between px-2 py-4">
+              <p className="text-sm text-gray-500">
+                {totalBoletos > 0 
+                  ? `Mostrando página ${currentPage} de ${Math.max(1, totalPages)} (${totalBoletos} resultados)`
+                  : "No hay resultados para esta búsqueda"}
+              </p>
+              
+              {totalPages > 1 && (
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
@@ -340,8 +359,55 @@ export function RifaDetailsClient({ rifa, premios, boletos, totalBoletos, curren
                     Siguiente
                   </Button>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-8 shadow-sm pt-2">
+          <CardHeader className="rounded-t-lg">
+            <CardTitle className="flex justify-between items-center">
+              Top 10 Mayores Compradores
+            </CardTitle>
+            <CardDescription>
+              Los clientes que han adquirido la mayor cantidad de boletos en esta rifa.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-20 text-center">Posición</TableHead>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Cédula</TableHead>
+                  <TableHead className="text-center">Boletos Comprados</TableHead>
+                  <TableHead>Teléfono</TableHead>
+                  <TableHead>Correo</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {topCompradores.length > 0 ? (
+                  topCompradores.map((comprador, index) => (
+                    <TableRow key={comprador.cedula} className={index < 3 ? "bg-yellow-50/30" : ""}>
+                      <TableCell className="text-center font-mono">
+                        {getPosicionBadge(index)}
+                      </TableCell>
+                      <TableCell className="font-medium">{comprador.nombre}</TableCell>
+                      <TableCell>{comprador.cedula}</TableCell>
+                      <TableCell className="text-center font-semibold">{comprador.cantidad}</TableCell>
+                      <TableCell>{comprador.telefono}</TableCell>
+                      <TableCell>{comprador.correo}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-6 text-gray-500">
+                      Aún no hay compradores registrados.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
 

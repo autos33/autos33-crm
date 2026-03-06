@@ -47,6 +47,14 @@ interface Boleto {
   fecha_compra: string
 }
 
+interface TopComprador {
+  cedula: string
+  nombre: string
+  telefono: string
+  correo: string
+  cantidad: number
+}
+
 async function getRifaById(id: string) {
   const { error: liberarBoletosError } = await supabase.rpc('liberar_boletos_reservados');
   if (liberarBoletosError) {
@@ -151,6 +159,19 @@ async function getBoletosVendidosPorRifa(rifaId: string) {
   return count || 0;
 }
 
+async function getTopCompradores(rifaId: string) {
+  const { data, error } = await supabase.rpc('obtener_top_compradores', {
+    p_id_rifa: parseInt(rifaId)
+  });
+
+  if (error) {
+    console.error("Error al obtener el top de compradores:", error);
+    return [];
+  }
+
+  return data as TopComprador[];
+}
+
 export default async function RifaDetailPage({ params, searchParams }: PageProps) {
   const cookieStore = cookies()
   const demoToken = cookieStore.get("admin-token")
@@ -171,6 +192,7 @@ export default async function RifaDetailPage({ params, searchParams }: PageProps
   
   const cantidadBoletosDisponibles = await getBoletosDisponiblesPorRifa(params.id);
   const cantidadBoletosVendidos = await getBoletosVendidosPorRifa(params.id);
+  const topCompradores = await getTopCompradores(params.id);
 
   const stats = {
     vendidos: cantidadBoletosVendidos,
@@ -187,6 +209,7 @@ export default async function RifaDetailPage({ params, searchParams }: PageProps
       totalBoletos={totalBoletos} // Pasamos el total de encontrados
       currentPage={currentPage}   // Pasamos la página actual
       stats={stats}
+      topCompradores={topCompradores}
     />
   )
 }
