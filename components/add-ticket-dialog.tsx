@@ -172,7 +172,6 @@ export function AddTicketDialog({ rifaId }: AddTicketDialogProps) {
                 value={formData.correo_comprador}
                 onChange={(e) => setFormData((prev) => ({ ...prev, correo_comprador: e.target.value }))}
                 placeholder="correo@ejemplo.com"
-                required
               />
             </div>
 

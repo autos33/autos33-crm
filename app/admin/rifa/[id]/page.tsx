@@ -45,6 +45,7 @@ interface Boleto {
   telefono_comprador: string
   cedula_comprador: string
   fecha_compra: string
+  esta_bloqueado: boolean
 }
 
 interface TopComprador {
