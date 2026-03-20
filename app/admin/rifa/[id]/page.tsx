@@ -26,6 +26,7 @@ interface Rifa {
   boletos_vendidos: number
   boletos_disponibles: number
   porcentaje_venta: number | null
+  mostrar_porcentaje: boolean
 }
 
 interface Premio {

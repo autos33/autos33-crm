@@ -31,6 +31,7 @@ interface Rifa {
   estado: string
   fecha_creacion: string
   porcentaje_venta: number | null
+  mostrar_porcentaje: boolean
 }
 
 interface Premio {
@@ -88,6 +89,34 @@ export function RifaDetailsClient({ rifa, premios, boletos, totalBoletos, curren
 
   const [porcentajeVisual, setPorcentajeVisual] = useState<number | null>(rifa.porcentaje_venta ?? null);
   const [isSavingPorcentaje, setIsSavingPorcentaje] = useState(false);
+  const [mostrarPorcentaje, setMostrarPorcentaje] = useState<boolean>(rifa.mostrar_porcentaje ?? true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSavingVisibilidad, setIsSavingVisibilidad] = useState(false);
+
+  const confirmarCambioVisibilidad = async () => {
+    setIsSavingVisibilidad(true);
+    const nuevoEstado = !mostrarPorcentaje;
+
+    try {
+      const { error } = await supabase
+        .from('Rifas')
+        .update({ mostrar_porcentaje: nuevoEstado })
+        .eq('id', rifa.id);
+
+      if (error) {
+        console.error("Error al actualizar la visibilidad:", error);
+        alert("Hubo un error al cambiar la visibilidad.");
+      } else {
+        setMostrarPorcentaje(nuevoEstado);
+        router.refresh(); // Refresca la data del servidor para mantener sincronía
+      }
+    } catch (err) {
+      console.error("Error inesperado:", err);
+    } finally {
+      setIsSavingVisibilidad(false);
+      setIsModalOpen(false); // Cierra el modal al terminar, sea éxito o error
+    }
+  };
 
   const actualizarPorcentajeVisual = async (nuevoValor: number | null) => {
     setIsSavingPorcentaje(true);
@@ -414,7 +443,10 @@ export function RifaDetailsClient({ rifa, premios, boletos, totalBoletos, curren
           </CardContent>
         </Card>
 
-        <Card className="mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        
+        {/* === TARJETA ORIGINAL (Ocupa 2/3) === */}
+        <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle>Porcentaje de Venta Visual (Marketing)</CardTitle>
             <CardDescription>
@@ -429,7 +461,6 @@ export function RifaDetailsClient({ rifa, premios, boletos, totalBoletos, curren
                   type="range" 
                   min="0" 
                   max="100" 
-                  // Si es null, el slider se posiciona en el valor real en lugar de 0
                   value={porcentajeVisual ?? ((stats.vendidos / stats.total) * 100)} 
                   onChange={(e) => setPorcentajeVisual(Number(e.target.value))}
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
@@ -438,7 +469,6 @@ export function RifaDetailsClient({ rifa, premios, boletos, totalBoletos, curren
                   <span className="text-2xl font-bold text-gray-800">
                     {porcentajeVisual !== null ? `${porcentajeVisual}%` : 'Real'}
                   </span>
-                  {/* Pequeño texto debajo para recordar el valor real en todo momento */}
                   <span className="text-xs text-gray-500 mt-1 font-medium">
                     Real: {((stats.vendidos / stats.total) * 100).toFixed(1)}%
                   </span>
@@ -464,6 +494,100 @@ export function RifaDetailsClient({ rifa, premios, boletos, totalBoletos, curren
             </div>
           </CardContent>
         </Card>
+
+        {/* === NUEVA TARJETA DE VISIBILIDAD (Ocupa 1/3) === */}
+        <Card className="md:col-span-1 flex flex-col border border-gray-100 shadow-sm">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <CardTitle className="text-lg">Visibilidad Pública</CardTitle>
+            </div>
+            <CardDescription className="text-sm mt-2">
+              Controla si los usuarios ven el porcentaje de ventas en la página principal.
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="flex-1 flex flex-col items-center justify-center gap-6 pb-8">
+            {/* Contenedor del Estado Actual: Visualmente claro y destacado */}
+            <div className="flex flex-col items-center gap-2 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl w-full text-center border border-gray-100 dark:border-gray-800">
+              <p className="text-sm text-gray-500 font-medium">Estado en la página</p>
+              
+              <div className="flex items-center gap-2">
+                {mostrarPorcentaje ? (
+                  <Badge variant="default" className="bg-green-100 text-green-800 border-green-200 hover:bg-green-200 font-semibold px-3 py-1 text-sm">
+                    Visible para todos
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary" className="bg-red-100 text-red-800 border-red-200 hover:bg-red-200 font-semibold px-3 py-1 text-sm">
+                    Oculto al público
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            {/* Botón de Acción Principal: Más grande y con texto claro */}
+            <Button 
+              size="lg"
+              // Cambiamos el color de "destructive" a "outline" para Ocultar, 
+              // y "default" para Mostrar, para que sea menos agresivo pero claro.
+              variant={mostrarPorcentaje ? "outline" : "default"}
+              className={`w-full `}
+              onClick={() => setIsModalOpen(true)}
+              disabled={isSavingVisibilidad} // Estado de carga (del prompt anterior)
+            >
+              {isSavingVisibilidad ? (
+                  // Icono de carga si tienes uno, o simplemente texto
+                  "Cambiando..."
+              ) : mostrarPorcentaje ? (
+                <>
+                  {/* Icono de Ojo Tachado */}
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.243 4.243L9.878 9.878" />
+                  </svg>
+                  Ocultar Porcentaje
+                </>
+              ) : (
+                <>
+                  {/* Icono de Ojo normal */}
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                  </svg>
+                  Mostrar Porcentaje
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* === MODAL DE CONFIRMACIÓN === */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-sm shadow-2xl mx-4">
+            <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-gray-100">
+              ¿Confirmar cambio?
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Estás a punto de <strong>{mostrarPorcentaje ? "ocultar" : "mostrar"}</strong> el porcentaje de ventas en la página principal de la rifa.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsModalOpen(false)}
+                disabled={isSavingVisibilidad}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={confirmarCambioVisibilidad}
+                disabled={isSavingVisibilidad}
+              >
+                {isSavingVisibilidad ? "Procesando..." : "Continuar"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
         <Card className="mb-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 p-4">
