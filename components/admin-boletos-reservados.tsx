@@ -23,7 +23,7 @@ interface BoletoBloqueado {
   estado: string
 }
 
-export function AdminBoletosBloqueados({ rifaId }: { rifaId: number }) {
+export function AdminBoletosReservados({ rifaId }: { rifaId: number }) {
   const [boletos, setBoletos] = useState<BoletoBloqueado[]>([])
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -37,12 +37,12 @@ export function AdminBoletosBloqueados({ rifaId }: { rifaId: number }) {
   const [errorMsg, setErrorMsg] = useState("")
   const [successMsg, setSuccessMsg] = useState("")
 
-  // Cargar boletos bloqueados al montar el componente
+  // Cargar boletos reservados al montar el componente
   useEffect(() => {
-    fetchBoletosBloqueados()
+    fetchBoletosReservados()
   }, [rifaId])
 
-  const fetchBoletosBloqueados = async () => {
+  const fetchBoletosReservados = async () => {
     setLoading(true)
     const { data, error } = await supabase
       .from("Boletos")
@@ -93,7 +93,7 @@ export function AdminBoletosBloqueados({ rifaId }: { rifaId: number }) {
 
     // 2. Validar el estado actual del boleto
     if (boleto.esta_bloqueado) {
-      setErrorMsg(`El boleto #${numeroABloquear} ya se encuentra bloqueado.`)
+      setErrorMsg(`El boleto #${numeroABloquear} ya se encuentra Reservado.`)
       setIsSubmitting(false)
       return
     }
@@ -114,8 +114,8 @@ export function AdminBoletosBloqueados({ rifaId }: { rifaId: number }) {
       setErrorMsg("Hubo un error de conexión al bloquear el boleto.")
     } else {
       // Éxito: recargar lista, limpiar formulario, mostrar éxito y NO cerrar el modal
-      await fetchBoletosBloqueados()
-      setSuccessMsg(`El boleto #${numeroABloquear} ha sido bloqueado con éxito.`)
+      await fetchBoletosReservados()
+      setSuccessMsg(`El boleto #${numeroABloquear} ha sido reservado con éxito.`)
       setNumeroInput("")
     }
     
@@ -142,7 +142,7 @@ export function AdminBoletosBloqueados({ rifaId }: { rifaId: number }) {
         <CardTitle className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Lock className="h-5 w-5 text-gray-500" />
-            Boletos Bloqueados (Regalos/Reserva)
+            Boletos Reservados (Regalos)
           </div>
           
           <Dialog open={isModalOpen} onOpenChange={(open) => {
@@ -218,7 +218,7 @@ export function AdminBoletosBloqueados({ rifaId }: { rifaId: number }) {
           <div className="text-center py-4 text-gray-500">Cargando boletos...</div>
         ) : boletos.length === 0 ? (
           <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-dashed">
-            No hay boletos bloqueados actualmente.
+            No hay boletos reservados actualmente.
           </div>
         ) : (
           <div className="space-y-4">
@@ -262,7 +262,7 @@ export function AdminBoletosBloqueados({ rifaId }: { rifaId: number }) {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={2} className="text-center py-6 text-gray-500">
-                      No se encontró ningún boleto bloqueado con el número "{searchTerm}".
+                      No se encontró ningún boleto reservado con el número "{searchTerm}".
                     </TableCell>
                   </TableRow>
                 )}

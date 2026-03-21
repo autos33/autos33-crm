@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LiberarBoletosDialog } from "@/components/liberar-boletos-dialog";
 import { RaffleStatsChart } from "@/components/raffle-stats-chart"
 import { AddTicketDialog } from "@/components/add-ticket-dialog"
-import { AdminBoletosBloqueados } from "@/components/admin-boletos-bloqueados"
+import { AdminBoletosReservados } from "@/components/admin-boletos-reservados"
 import { ActualizarButton } from "@/components/actualizar-button"
 import { CreatePremio } from "@/components/nuevo-premio-dialog"
 import { CambiarEstadoRifa } from "@/components/cambiar-estado-rifa";
@@ -394,7 +394,9 @@ export function RifaDetailsClient({ rifa, premios, boletos, totalBoletos, curren
           </CardContent>
         </Card>
 
-        <AdminBoletosBloqueados rifaId={rifa.id} />
+        {/*
+        <AdminBoletosReservados rifaId={rifa.id} />
+        */}
 
         <Card className="mb-8 shadow-sm pt-2">
           <CardHeader className="rounded-t-lg">
